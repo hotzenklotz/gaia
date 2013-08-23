@@ -36,11 +36,32 @@
     getCamera: function(options, callback) {
       console.log('mozCamera.getCamera');
 
+      var pictureSizes = this.capabilities.pictureSizes[0];
+
       navigator.mozGetUserMedia({video: true},
         function(stream) {
-           this.stream = stream;
-           callback(this);
-           this.onPreviewStateChange('started');
+          this.stream = stream;
+
+          //update the camera's capabilities to use its real resolution
+          setPictureSize = function(e) {
+            pictureSizes.width = video.videoWidth;
+            pictureSizes.height = video.videoHeight;
+            console.log(e, video.videoWidth); // ############################# remove
+            video.pause();
+          }
+
+          var video = document.createElement('video');
+          // video.addEventListener('loadeddata', setPictureSize, false); //################ remove
+          // video.addEventListener('loadedmetadata', setPictureSize, false);
+          // video.addEventListener('canplay', setPictureSize, false);
+          // video.addEventListener('play', setPictureSize, false);
+          video.addEventListener('playing', setPictureSize, false);
+
+          video.src = window.URL.createObjectURL(stream);
+          video.play();
+
+          callback(this);
+          this.onPreviewStateChange('started');
         }.bind(this),
         function() {
           console.log('Could not initialize camera.');
